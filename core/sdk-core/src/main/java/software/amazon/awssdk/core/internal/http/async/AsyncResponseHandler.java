@@ -80,10 +80,13 @@ public final class AsyncResponseHandler<T> implements TransformingAsyncResponseH
     public CompletableFuture<T> prepare() {
         streamFuture = new CompletableFuture<>();
         return streamFuture.thenCompose(baos -> {
-            ByteArrayInputStream content = new ByteArrayInputStream(baos.toByteArray());
-            // Ignore aborts - we already have all of the content.
-            AbortableInputStream abortableContent = AbortableInputStream.create(content);
-            httpResponse.content(abortableContent);
+            byte[] output = baos.toByteArray();
+            if(output.length > 0) {
+                ByteArrayInputStream content = new ByteArrayInputStream(baos.toByteArray());
+                // Ignore aborts - we already have all of the content.
+                AbortableInputStream abortableContent = AbortableInputStream.create(content);
+                httpResponse.content(abortableContent);
+            }
             try {
                 return CompletableFuture.completedFuture(responseHandler.handle(crc32Validator.apply(httpResponse.build()),
                                                                                 executionAttributes));
